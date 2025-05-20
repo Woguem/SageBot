@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Progress Dashboard</title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='styles.css') }}"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="/">VerbaFlow</a>
+            </div>
+        </nav>
+
+        <div class="container mt-5">
+            <h1 class="text-center">Your Progress</h1>
+            <div class="text-center mb-4">
+                <a href="/" class="btn btn-primary">🏠 Back to Home</a>
+            </div>
+
+            <!-- Training History Table -->
+            <div class="card shadow-lg p-4 mt-4">
+                <h5>Training History</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped mt-3">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Module</th>
+                                <th>Input</th>
+                                <th>Feedback</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if error %}
+                            <tr>
+                                <td colspan="5" class="text-danger text-center">
+                                    Error: {{ error }}
+                                </td>
+                            </tr>
+                            {% elif progress_data %} {% for entry in
+                            progress_data %}
+                            <tr>
+                                <td>{{ entry.module_type }}</td>
+                                <td>
+                                    {{ entry.user_input[:30] }}{% if
+                                    entry.user_input|length > 30 %}...{% endif
+                                    %}
+                                </td>
+                                <td>
+                                    {{ entry.ai_feedback[:50] }}{% if
+                                    entry.ai_feedback|length > 50 %}...{% endif
+                                    %}
+                                </td>
+                                <td>
+                                    <strong
+                                        >{{ "%.1f"|format(entry.score)
+                                        }}</strong
+                                    >
+                                </td>
+                                <td>{{ entry.timestamp }}</td>
+                            </tr>
+                            {% endfor %} {% else %}
+                            <tr>
+                                <td colspan="5" class="text-muted text-center">
+                                    No progress records found.
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if progress_data %}
+            <!-- Score Trend Chart -->
+            <div class="card shadow-lg p-4 mt-4">
+                <h5>Score Trend</h5>
+                <canvas id="trendChart" height="250"></canvas>
+            </div>
+
+            <!-- Module Performance Breakdown (Bar Chart) -->
+            <div class="card shadow-lg p-4 mt-4">
+                <h5>Performance by Module</h5>
+                <canvas id="moduleChart" height="250"></canvas>
+            </div>
+
+            <!-- Score Distribution (Pie Chart) -->
+            <div class="card shadow-lg p-4 mt-4">
+                <h5>Score Distribution</h5>
+                <div class="row">
+                    <div class="col-md-6 offset-md-3">
+                        <canvas id="scoreChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <footer class="text-center mt-5 py-3 bg-dark text-light">
+            <p>© 2025 VerbaFlow. All Rights Reserved.</p>
+        </footer>
+
+        <!-- First, add a data element to pass the progress data to JavaScript -->
+        <div
+            id="progress-data"
+            data-progress="{{ progress_data|tojson }}"
+        ></div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // Get progress data from the data attribute
+                const progressDataElement =
+                    document.getElementById("progress-data");
+                let progressData = [];
+
+                try {
+                    progressData = JSON.parse(
+                        progressDataElement.getAttribute("data-progress") ||
+                            "[]",
+                    );
+                } catch (e) {
+                    console.error("Failed to parse progress data:", e);
+                }
+
+                // Only proceed if we have data
+                if (!progressData || progressData.length === 0) {
+                    console.log("No progress data available");
+                    return;
+                }
+
+                // Extract data for charts
+                const labels = progressData.map((entry) => entry.timestamp);
+                const scores = progressData.map((entry) => entry.score);
+
+                // Rest of your chart rendering code...
+                // Categorize scores for Pie Chart
+                let highScores = 0,
+                    midScores = 0,
+                    lowScores = 0;
+                scores.forEach((score) => {
+                    if (score >= 8) highScores++;
+                    else if (score >= 6) midScores++;
+                    else lowScores++;
+                });
+
+                // Group by module for Bar Chart
+                const moduleData = {};
+                progressData.forEach((entry) => {
+                    const module = entry.module_type;
+                    if (!moduleData[module]) {
+                        moduleData[module] = { total: 0, count: 0 };
+                    }
+                    moduleData[module].total += entry.score;
+                    moduleData[module].count++;
+                });
+
+                const moduleLabels = Object.keys(moduleData);
+                const moduleScores = moduleLabels.map(
+                    (module) =>
+                        moduleData[module].total / moduleData[module].count,
+                );
+
+                try {
+                    // Trend Chart (Line)
+                    new Chart(document.getElementById("trendChart"), {
+                        type: "line",
+                        data: {
+                            labels: labels.reverse(), // Newest first
+                            datasets: [
+                                {
+                                    label: "Score",
+                                    data: scores.reverse(),
+                                    borderColor: "blue",
+                                    tension: 0.1,
+                                    fill: false,
+                                },
+                            ],
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 10,
+                                    title: {
+                                        display: true,
+                                        text: "Score",
+                                    },
+                                },
+                            },
+                        },
+                    });
+
+                    // Module Performance Chart (Bar)
+                    new Chart(document.getElementById("moduleChart"), {
+                        type: "bar",
+                        data: {
+                            labels: moduleLabels,
+                            datasets: [
+                                {
+                                    label: "Average Score",
+                                    data: moduleScores,
+                                    backgroundColor: "green",
+                                },
+                            ],
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 10,
+                                    title: {
+                                        display: true,
+                                        text: "Average Score",
+                                    },
+                                },
+                            },
+                        },
+                    });
+
+                    // Score Distribution Chart (Pie)
+                    new Chart(document.getElementById("scoreChart"), {
+                        type: "pie",
+                        data: {
+                            labels: [
+                                "High (8-10)",
+                                "Medium (6-7.9)",
+                                "Low (0-5.9)",
+                            ],
+                            datasets: [
+                                {
+                                    data: [highScores, midScores, lowScores],
+                                    backgroundColor: [
+                                        "#28a745",
+                                        "#ffc107",
+                                        "#dc3545",
+                                    ],
+                                },
+                            ],
+                        },
+                    });
+                } catch (e) {
+                    console.error("Error rendering charts:", e);
+                }
+            });
+        </script>
+    </body>
+</html>
