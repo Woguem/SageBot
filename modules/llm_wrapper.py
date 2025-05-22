@@ -1,12 +1,46 @@
 import os
 from dotenv import load_dotenv
 from groq import Groq
+import boto3
+from botocore.exceptions import ClientError
+import json
 
-# Load environment variables
-load_dotenv()
 
-# Get Groq API key
-groq_api_key = os.getenv("GROQ_API_KEY")
+# # Load environment variables
+# load_dotenv()
+
+# # Get Groq API key
+# groq_api_key = os.getenv("GROQ_API_KEY")
+
+def get_secret():
+
+    secret_name = "groqapikey"
+    region_name = "eu-west-3"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        raise e
+
+    secret_string = json.loads(get_secret_value_response['SecretString'])
+    
+    secret = secret_string['GROQ_API_KEY']
+    
+    return secret
+
+groq_api_key = get_secret()
+
+
+
 
 # Initialize Groq client
 groq_client = Groq(api_key=groq_api_key) if groq_api_key else None
