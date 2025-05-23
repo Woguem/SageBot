@@ -21,9 +21,9 @@ jobs:
       - name: Deploy via SSH
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-            cd verbaflow
+            cd sagebot
             git pull
             source venv/bin/activate
             pip install -r requirements.txt
-            sudo systemctl restart verbaflow
+            sudo systemctl restart sagebot
           EOF

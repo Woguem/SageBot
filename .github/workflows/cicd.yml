@@ -1,4 +1,4 @@
-name: Verbaflow CI/CD
+name: SageBot CI/CD
 on:
   # Trigger the workflow on push or pull request events
   # to the main branch
