@@ -551,10 +551,10 @@ def text_to_speech():
 
 if __name__ == '__main__':
     # Configure general logging
-    logging.basicConfig(level=logging.INFO)
+    # logging.basicConfig(level=logging.INFO)
 
-    # Activate HTTP Flask (werkzeug) logs 
-    logging.getLogger('werkzeug').setLevel(logging.INFO)
+    # # Activate HTTP Flask (werkzeug) logs 
+    # logging.getLogger('werkzeug').setLevel(logging.INFO)
 
-    serve(app, host="0.0.0.0", port=8080) # Use waitress for production deployment
-    # app.run(host='0.0.0.0', port=8080, debug=True)  # Use this for local development
+    # serve(app, host="0.0.0.0", port=8080) # Use waitress for production deployment
+    app.run(host='0.0.0.0', port=8080, debug=True)  # Use this for local development
