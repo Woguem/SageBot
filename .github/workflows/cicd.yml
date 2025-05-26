@@ -38,34 +38,39 @@ jobs:
       - name: Run tests
         run: |
           PYTHONPATH=. pytest tests/
-  deploy-docker-hub:
+  deploy-ecr:
     needs: test
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        file: ./Dockerfile
-        push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/sagebot:${{ github.sha }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Image digest
-      run: echo ${{ steps.deploy-docker-hub.outputs.digest }}
+      - name: Build and push Docker image to ECR
+        id: build-and-push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.ECR_REGISTRY_URI }}:{{ github.sha }}
+
+      - name: Image digest
+        run: echo ${{ steps.build-and-push.outputs.digest }}
+
   deploy-ec2:
-    needs: deploy-docker-hub
+    needs: deploy-ecr
     runs-on: ubuntu-latest
 
     steps:
@@ -77,8 +82,9 @@ jobs:
       - name: Deploy Docker Image on EC2
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_DNS }} << EOF
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/sagebot:${{ github.sha }}
+            sudo docker pull ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
             sudo docker stop sagebot || true
             sudo docker rm sagebot || true
-            sudo docker run -d --name sagebot -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/sagebot:${{ github.sha }}
+            sudo docker run -d --name sagebot -p 8080:8080 ${{ secrets.ECR_REGISTRY }}/sagebot:${{ github.sha }}
           EOF
+
