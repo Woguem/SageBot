@@ -64,7 +64,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.ECR_REGISTRY_URI }}: ${{ github.sha }}
+          tags: ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
 
       - name: Image digest
         run: echo ${{ steps.build-and-push.outputs.digest }}
