@@ -1,7 +1,7 @@
 name: SageBot CI/CD
 on:
-  # Trigger the workflow on push or pull request events
-  # to the main branch
+  ## Trigger the workflow on push or pull request events
+  ## to the main branch
   push:
     branches:
       - main
