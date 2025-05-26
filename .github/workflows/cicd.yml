@@ -85,6 +85,6 @@ jobs:
             sudo docker pull ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
             sudo docker stop sagebot || true
             sudo docker rm sagebot || true
-            sudo docker run -d --name sagebot -p 8080:8080 ${{ secrets.ECR_REGISTRY }}/sagebot:${{ github.sha }}
+            sudo docker run -d --name sagebot -p 8080:8080 ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
           EOF
 
