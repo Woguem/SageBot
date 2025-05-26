@@ -549,5 +549,5 @@ def text_to_speech():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    serve(app, host="0.0.0.0", port=8080)
-    # app.run(debug=True)
+    serve(app, host="0.0.0.0", port=8080) # Use waitress for production deployment
+    # app.run(host='0.0.0.0', port=8080, debug=True)  # Use this for local development

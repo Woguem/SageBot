@@ -1,0 +1,5 @@
+.gitignore
+.env
+tests/
+__pycache__/
+database/__pycache__
