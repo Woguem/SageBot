@@ -90,7 +90,7 @@ jobs:
             export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             export AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
             # Login to ECR using AWS CLI and role IAM permissions
-            aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_without_Repo_name }}
+            aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY_without_Repo_name }}
             sudo docker pull ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
             sudo docker stop sagebot || true
             sudo docker rm sagebot || true
