@@ -9,6 +9,7 @@ from modules.llm_wrapper import customLLMBot, chatVoiceBot
 from modules.speech_processing import transcribe_audio
 from datetime import datetime
 from waitress import serve
+import logging
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -549,5 +550,11 @@ def text_to_speech():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # serve(app, host="0.0.0.0", port=8080) # Use waitress for production deployment
-    app.run(host='0.0.0.0', port=8080, debug=True)  # Use this for local development
+    # Configure general logging
+    logging.basicConfig(level=logging.INFO)
+
+    # Activate HTTP Flask (werkzeug) logs 
+    logging.getLogger('werkzeug').setLevel(logging.INFO)
+
+    serve(app, host="0.0.0.0", port=8080) # Use waitress for production deployment
+    # app.run(host='0.0.0.0', port=8080, debug=True)  # Use this for local development
