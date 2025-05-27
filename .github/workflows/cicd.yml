@@ -87,13 +87,6 @@ jobs:
             docker pull ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
             docker stop sagebot || true
             docker rm sagebot || true
-            docker run -d \
-              --name sagebot \
-              --restart unless-stopped \
-              -p 8080:8080 \
-              --device /dev/snd \
-              -e PULSE_SERVER=unix:/tmp/pulseaudio.socket \
-              -v /tmp/pulseaudio.socket:/tmp/pulseaudio.socket \
-              ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
+            docker run -d --name sagebot -p 8080:8080 ${{ secrets.ECR_REGISTRY_URI }}:${{ github.sha }}
           EOF
 
