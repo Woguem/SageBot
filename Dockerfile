@@ -13,9 +13,15 @@ RUN apt-get update && \
     ffmpeg \
     portaudio19-dev \
     python3-pyaudio \
+    pulseaudio \
     alsa-utils \
-    libasound2-plugins \
-    && rm -rf /var/lib/apt/lists/*
+    libasound2-plugins
+
+# Configure PulseAudio
+RUN mkdir -p /etc/pulse && \
+    echo "default-server = unix:/tmp/pulseaudio.socket" > /etc/pulse/client.conf && \
+    echo "autospawn = no" >> /etc/pulse/client.conf && \
+    echo "enable-shm = false" >> /etc/pulse/client.conf
 
 # Install any needed packages specified in requirements.txt
 RUN python -m pip install --upgrade pip && \
@@ -25,4 +31,4 @@ RUN python -m pip install --upgrade pip && \
 EXPOSE 8080
 
 # Run app.py when the container launches
-CMD ["python", "app.py"]
+CMD ["sh", "-c", "pulseaudio -D --exit-idle-time=-1 && python app.py"]
