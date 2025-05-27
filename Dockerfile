@@ -7,8 +7,15 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Installer ffmpeg 
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y \
+    ffmpeg \
+    portaudio19-dev \
+    python3-pyaudio \
+    alsa-utils \
+    libasound2-plugins \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install any needed packages specified in requirements.txt
 RUN python -m pip install --upgrade pip && \
